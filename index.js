@@ -497,7 +497,7 @@
         startGame: function () {
             this.runningTime = 0;
             this.playingIntro = false;
-            this.tRex.forEach(rex => rex.playingIntro = false);
+            this.tRex.forEach(rex => { rex.playingIntro = false; rex.xPos = 0; });
             this.containerEl.style.webkitAnimation = '';
             this.playCount++;
         },
