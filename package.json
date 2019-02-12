@@ -1,0 +1,12 @@
+{
+  "name": "t-rex-evolved",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:JohnFultonian/t-rex-evolved.git",
+  "author": "John Fulton <john@john-fulton.com>",
+  "license": "MIT",
+  "dependencies": {
+    "http-server": "^0.11.1",
+    "lodash": "^4.17.11"
+  }
+}

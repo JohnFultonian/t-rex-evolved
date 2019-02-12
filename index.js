@@ -389,6 +389,12 @@
 
             window.addEventListener(Runner.events.RESIZE,
                 this.debounceResize.bind(this));
+          window.roboRex.init(() => {
+            this.loadSounds();
+            this.playing = true;
+            this.tRex.startJump(this.currentSpeed)
+            this.update();
+          });
         },
 
         /**
@@ -517,6 +523,9 @@
                 this.dimensions.HEIGHT);
         },
 
+        act: function () {
+        },
+
         /**
          * Update the game frame and schedules the next one.
          */
@@ -563,6 +572,9 @@
                     }
                 } else {
                     this.gameOver();
+                    window.roboRex.finished([], () => {
+                      this.restart();
+                    });
                 }
 
                 var playAchievementSound = this.distanceMeter.update(deltaTime,
@@ -593,6 +605,8 @@
                         }
                     }
                 }
+                let actions = window.roboRex.tick({});
+                this.act(actions);
             }
 
             if (this.playing || (!this.activated &&
