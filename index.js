@@ -565,7 +565,7 @@
 
                 if(this.tRex.every(rex => rex.dead)) {
                     this.gameOver();
-                    window.roboRex.finished([], () => {
+                  window.roboRex.finished(this.tRex.map(rex => rex.score), () => {
                       this.restart();
                     });
                 } else {

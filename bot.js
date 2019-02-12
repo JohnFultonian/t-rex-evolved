@@ -2,7 +2,6 @@ const POPULATION_SIZE = 100;
 
 class RoboRex {
   init(start) {
-    console.log('INIT');
     start();
   }
 
@@ -11,7 +10,6 @@ class RoboRex {
   }
 
   finished(scores, restart) {
-    console.log('FINISHED');
     setTimeout(() => restart(), 1000);
   }
 }
