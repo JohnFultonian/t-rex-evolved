@@ -5,7 +5,7 @@ class RoboRex {
     start();
   }
 
-  tick(situation) {
+  tick(nextObstacle) {
     return _.range(POPULATION_SIZE).map(() => _.random(0,1,true) < 0.01);
   }
 

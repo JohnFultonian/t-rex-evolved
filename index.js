@@ -604,7 +604,13 @@
                         }
                     }
                 }
-                let actions = window.roboRex.tick({});
+                let obstacle = this.horizon.obstacles[0]
+                const nextObstacle = obstacle && {
+                  distance: obstacle.xPos,
+                  width: obstacle.typeConfig.width * obstacle.size,
+                  height: obstacle.typeConfig.height,
+                }
+                let actions = window.roboRex.tick(nextObstacle);
                 this.act(actions);
             }
 
