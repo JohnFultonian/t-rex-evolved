@@ -30,7 +30,7 @@
         this.canvas = null;
         this.canvasCtx = null;
 
-        this.tRex = null;
+        this.tRex = [];
 
         this.distanceMeter = null;
         this.distanceRan = 0;
@@ -269,10 +269,10 @@
                     case 'GRAVITY':
                     case 'MIN_JUMP_HEIGHT':
                     case 'SPEED_DROP_COEFFICIENT':
-                        this.tRex.config[setting] = value;
+                        this.tRex.forEach(rex => rex.config[setting] = value);
                         break;
                     case 'INITIAL_JUMP_VELOCITY':
-                        this.tRex.setJumpVelocity(value);
+                        this.tRex.forEach(rex => rex.setJumpVelocity(value));
                         break;
                     case 'SPEED':
                         this.setSpeed(value);
@@ -376,7 +376,7 @@
                 this.spriteDef.TEXT_SPRITE, this.dimensions.WIDTH);
 
             // Draw t-rex
-            this.tRex = new Trex(this.canvas, this.spriteDef.TREX);
+            this.tRex = _.range(POPULATION_SIZE).map(() => new Trex(this.canvas, this.spriteDef.TREX));
 
             this.outerContainerEl.appendChild(this.containerEl);
 
@@ -392,7 +392,7 @@
           window.roboRex.init(() => {
             this.loadSounds();
             this.playing = true;
-            this.tRex.startJump(this.currentSpeed)
+            this.tRex.forEach(rex => rex.startJump(this.currentSpeed))
             this.update();
           });
         },
@@ -439,7 +439,7 @@
                 this.distanceMeter.calcXPos(this.dimensions.WIDTH);
                 this.clearCanvas();
                 this.horizon.update(0, 0, true);
-                this.tRex.update(0);
+                this.tRex.forEach(rex => rex.update(0));
 
                 // Outer container and distance meter.
                 if (this.playing || this.crashed || this.paused) {
@@ -448,7 +448,7 @@
                     this.distanceMeter.update(0, Math.ceil(this.distanceRan));
                     this.stop();
                 } else {
-                    this.tRex.draw(0, 0);
+                    this.tRex.forEach(rex => rex.draw(0, 0));
                 }
             }
         },
@@ -460,7 +460,7 @@
         playIntro: function () {
             if (!this.activated && !this.crashed) {
                 this.playingIntro = true;
-                this.tRex.playingIntro = true;
+                this.tRex.forEach(rex => rex.playingIntro = true);
 
                 // CSS animation definition.
                 var keyframes = '@-webkit-keyframes intro { ' +
@@ -497,19 +497,9 @@
         startGame: function () {
             this.runningTime = 0;
             this.playingIntro = false;
-            this.tRex.playingIntro = false;
+            this.tRex.forEach(rex => rex.playingIntro = false);
             this.containerEl.style.webkitAnimation = '';
             this.playCount++;
-
-            // Handle tabbing off the page. Pause the current game.
-            document.addEventListener(Runner.events.VISIBILITY,
-                this.onVisibilityChange.bind(this));
-
-            window.addEventListener(Runner.events.BLUR,
-                this.onVisibilityChange.bind(this));
-
-            window.addEventListener(Runner.events.FOCUS,
-                this.onVisibilityChange.bind(this));
         },
 
         clearCanvas: function () {
@@ -517,7 +507,11 @@
                 this.dimensions.HEIGHT);
         },
 
-        act: function () {
+        act: function (actions) {
+          actions.forEach((shouldJump, index) => {
+            let rex = this.tRex[index];
+            shouldJump && rex.startJump(this.currentSpeed);
+          });
         },
 
         /**
@@ -530,18 +524,21 @@
             var deltaTime = now - (this.time || now);
             this.time = now;
 
+
             if (this.playing) {
                 this.clearCanvas();
+                this.tRex.forEach(rex => {
+                  if(rex.jumping) {
+                    rex.updateJump(deltaTime);
+                  }
+                });
 
-                if (this.tRex.jumping) {
-                    this.tRex.updateJump(deltaTime);
-                }
 
                 this.runningTime += deltaTime;
                 var hasObstacles = this.runningTime > this.config.CLEAR_TIME;
 
                 // First jump triggers the intro.
-                if (this.tRex.jumpCount == 1 && !this.playingIntro) {
+                if (this.tRex[0].jumpCount == 1 && !this.playingIntro) {
                     this.playIntro();
                 }
 
@@ -555,20 +552,28 @@
                 }
 
                 // Check for collisions.
-                var collision = hasObstacles &&
-                    checkForCollision(this.horizon.obstacles[0], this.tRex);
+                this.tRex.forEach(rex => {
+                  var collision = hasObstacles &&
+                      checkForCollision(this.horizon.obstacles[0], rex);
 
-                if (!collision) {
-                    this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
+                  if(collision) {
+                    rex.dead = true;
+                    rex.score = this.distanceRan;
+                  }
+                });
 
-                    if (this.currentSpeed < this.config.MAX_SPEED) {
-                        this.currentSpeed += this.config.ACCELERATION;
-                    }
-                } else {
+
+                if(this.tRex.every(rex => rex.dead)) {
                     this.gameOver();
                     window.roboRex.finished([], () => {
                       this.restart();
                     });
+                } else {
+                  this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
+
+                  if (this.currentSpeed < this.config.MAX_SPEED) {
+                      this.currentSpeed += this.config.ACCELERATION;
+                  }
                 }
 
                 var playAchievementSound = this.distanceMeter.update(deltaTime,
@@ -603,9 +608,14 @@
                 this.act(actions);
             }
 
+            this.tRex.forEach(rex => {
+              if(this.playing) {
+                rex.update(deltaTime);
+              }
+            });
+
             if (this.playing || (!this.activated &&
-                this.tRex.blinkCount < Runner.config.MAX_BLINK_COUNT)) {
-                this.tRex.update(deltaTime);
+                this.tRex[0].blinkCount < Runner.config.MAX_BLINK_COUNT)) {
                 this.scheduleNextUpdate();
             }
         },
@@ -671,78 +681,16 @@
          * Process keydown.
          * @param {Event} e
          */
-        onKeyDown: function (e) {
-            // Prevent native page scrolling whilst tapping on mobile.
-            if (IS_MOBILE && this.playing) {
-                e.preventDefault();
-            }
-
-            if (e.target != this.detailsButton) {
-                if (!this.crashed && (Runner.keycodes.JUMP[e.keyCode] ||
-                    e.type == Runner.events.TOUCHSTART)) {
-                    if (!this.playing) {
-                        this.loadSounds();
-                        this.playing = true;
-                        this.update();
-                        if (window.errorPageController) {
-                            errorPageController.trackEasterEgg();
-                        }
-                    }
-                    //  Play sound effect and jump on starting the game for the first time.
-                    if (!this.tRex.jumping && !this.tRex.ducking) {
-                        this.playSound(this.soundFx.BUTTON_PRESS);
-                        this.tRex.startJump(this.currentSpeed);
-                    }
-                }
-
-                if (this.crashed && e.type == Runner.events.TOUCHSTART &&
-                    e.currentTarget == this.containerEl) {
-                    this.restart();
-                }
-            }
-
-            if (this.playing && !this.crashed && Runner.keycodes.DUCK[e.keyCode]) {
-                e.preventDefault();
-                if (this.tRex.jumping) {
-                    // Speed drop, activated only when jump key is not pressed.
-                    this.tRex.setSpeedDrop();
-                } else if (!this.tRex.jumping && !this.tRex.ducking) {
-                    // Duck.
-                    this.tRex.setDuck(true);
-                }
-            }
-        },
+        // disable keyboard
+        onKeyDown: function (e) { },
 
 
         /**
          * Process key up.
          * @param {Event} e
          */
+        // disable keyboard
         onKeyUp: function (e) {
-            var keyCode = String(e.keyCode);
-            var isjumpKey = Runner.keycodes.JUMP[keyCode] ||
-                e.type == Runner.events.TOUCHEND ||
-                e.type == Runner.events.MOUSEDOWN;
-
-            if (this.isRunning() && isjumpKey) {
-                this.tRex.endJump();
-            } else if (Runner.keycodes.DUCK[keyCode]) {
-                this.tRex.speedDrop = false;
-                this.tRex.setDuck(false);
-            } else if (this.crashed) {
-                // Check that enough time has elapsed before allowing jump key to restart.
-                var deltaTime = getTimeStamp() - this.time;
-
-                if (Runner.keycodes.RESTART[keyCode] || this.isLeftClickOnCanvas(e) ||
-                    (deltaTime >= this.config.GAMEOVER_CLEAR_TIME &&
-                        Runner.keycodes.JUMP[keyCode])) {
-                    this.restart();
-                }
-            } else if (this.paused && isjumpKey) {
-                // Reset the jump state
-                this.tRex.reset();
-                this.play();
-            }
         },
 
         /**
@@ -784,8 +732,7 @@
             this.stop();
             this.crashed = true;
             this.distanceMeter.acheivement = false;
-
-            this.tRex.update(100, Trex.status.CRASHED);
+            this.tRex.forEach(rex => rex.update(100, Trex.status.CRASHED));
 
             // Update the high score.
             if (this.distanceRan > this.highestScore) {
@@ -808,7 +755,7 @@
             if (!this.crashed) {
                 this.playing = true;
                 this.paused = false;
-                this.tRex.update(0, Trex.status.RUNNING);
+                this.tRex.forEach(rex => rex.update(0, Trex.status.RUNNING));
                 this.time = getTimeStamp();
                 this.update();
             }
@@ -816,6 +763,7 @@
 
         restart: function () {
             if (!this.raqId) {
+                this.tRex.forEach(rex => {rex.reset(); rex.dead = false; rex.score = 0; rex.xPos = 0;});
                 this.playCount++;
                 this.runningTime = 0;
                 this.playing = true;
@@ -827,7 +775,6 @@
                 this.clearCanvas();
                 this.distanceMeter.reset(this.highestScore);
                 this.horizon.reset();
-                this.tRex.reset();
                 this.playSound(this.soundFx.BUTTON_PRESS);
                 this.invert(true);
                 this.update();
@@ -837,28 +784,15 @@
         /**
          * Pause the game if the tab is not in focus.
          */
-        onVisibilityChange: function (e) {
-            if (document.hidden || document.webkitHidden || e.type == 'blur' ||
-                document.visibilityState != 'visible') {
-                this.stop();
-            } else if (!this.crashed) {
-                this.tRex.reset();
-                this.play();
-            }
-        },
+        // disabled
+        onVisibilityChange: function (e) { },
 
         /**
          * Play a sound.
          * @param {SoundBuffer} soundBuffer
          */
-        playSound: function (soundBuffer) {
-            if (soundBuffer) {
-                var sourceNode = this.audioContext.createBufferSource();
-                sourceNode.buffer = soundBuffer;
-                sourceNode.connect(this.audioContext.destination);
-                sourceNode.start(0);
-            }
-        },
+        // disable sound
+        playSound: function (soundBuffer) { },
 
         /**
          * Inverts the current page / canvas colors.
@@ -1681,6 +1615,7 @@
          * @param {number} y
          */
         draw: function (x, y) {
+            if(this.dead) { return }
             var sourceX = x;
             var sourceY = y;
             var sourceWidth = this.ducking && this.status != Trex.status.CRASHED ?

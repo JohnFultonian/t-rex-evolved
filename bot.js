@@ -1,4 +1,4 @@
-const POPULATION_SIZE = 1;
+const POPULATION_SIZE = 100;
 
 class RoboRex {
   init(start) {
