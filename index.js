@@ -450,12 +450,6 @@
                 } else {
                     this.tRex.draw(0, 0);
                 }
-
-                // Game over panel.
-                if (this.crashed && this.gameOverPanel) {
-                    this.gameOverPanel.updateDimensions(this.dimensions.WIDTH);
-                    this.gameOverPanel.draw();
-                }
             }
         },
 
@@ -792,15 +786,6 @@
             this.distanceMeter.acheivement = false;
 
             this.tRex.update(100, Trex.status.CRASHED);
-
-            // Game over panel.
-            if (!this.gameOverPanel) {
-                this.gameOverPanel = new GameOverPanel(this.canvas,
-                    this.spriteDef.TEXT_SPRITE, this.spriteDef.RESTART,
-                    this.dimensions);
-            } else {
-                this.gameOverPanel.draw();
-            }
 
             // Update the high score.
             if (this.distanceRan > this.highestScore) {
