@@ -1,8 +1,8 @@
-const sigmoid = num => 1/(1+Math.exp(-num));
+const sigmoid = num => 1/(1+Math.exp((-num) / 1));
 
 
-const INPUT_LAYER_SIZE = 5;
-const HIDDEN_LAYER_SIZE = 4
+const INPUT_LAYER_SIZE = 2;
+const HIDDEN_LAYER_SIZE = 2
 const OUTPUT_LAYER_SIZE = 1;
 
 
@@ -28,7 +28,7 @@ const createInputNode = () => new Node([1], [0], i => i);
 
 const createRandomNode = (inputSize) => new Node(
     _.range(inputSize).map(() => _.random(-1, 1, true)),
-    _.range(inputSize).map(() => _.random(-1, 1, true))
+  _.range(inputSize).map(() => 0)//_.random(-1, 1, true))
 );
 
 // Represents a Neural Network
