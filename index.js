@@ -605,10 +605,16 @@
                     }
                 }
                 let obstacle = this.horizon.obstacles[0]
+                let bottom = this.dimensions.HEIGHT -
+                      obstacle.yPos -
+                      obstacle.typeConfig.height -
+                      this.config.BOTTOM_PAD;
+
                 const nextObstacle = obstacle && {
                   distance: obstacle.xPos,
                   width: obstacle.typeConfig.width * obstacle.size,
-                  height: obstacle.typeConfig.height,
+                  bottom,
+                  top: obstacle.typeConfig.height + bottom,
                 }
                 let actions = window.roboRex.tick(nextObstacle);
                 this.act(actions);
