@@ -1,4 +1,6 @@
-const POPULATION_SIZE = 100;
+const POPULATION_SIZE = 1000;
+
+const sigmoid = num => 1/(1+Math.exp(-num));
 
 class RoboRex {
   init(start) {
