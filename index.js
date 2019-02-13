@@ -614,6 +614,7 @@
                         this.config.BOTTOM_PAD;
 
                   nextObstacle = {
+                    currentSpeed: this.currentSpeed,
                     distance: obstacle.xPos,
                     width: obstacle.typeConfig.width * obstacle.size,
                     bottom,
