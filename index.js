@@ -2,6 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 // extract from chromium source code by @liuwayong
+window.SPEED_FACTOR = 1;
+window.NEXT_SPEED_FACTOR = 1;
+var updates = 0;
+
+let showUpdates = () => {
+  console.log('updates per second', updates);
+  updates = 0;
+  setTimeout(showUpdates, 1000);
+}
+
+showUpdates();
+
 (function () {
     'use strict';
     /**
@@ -84,7 +96,7 @@
      * Frames per second.
      * @const
      */
-    var FPS = 60;
+    var FPS = 60 * SPEED_FACTOR;
 
     /** @const */
     var IS_HIDPI = window.devicePixelRatio > 1;
@@ -345,6 +357,10 @@
         },
 
         startUpdateLoop: function () {
+          if(NEXT_SPEED_FACTOR != SPEED_FACTOR) {
+            SPEED_FACTOR = NEXT_SPEED_FACTOR;
+            this.msPerFrame = 1000 / (FPS * SPEED_FACTOR);
+          }
           this.update();
           setTimeout(this.startUpdateLoop.bind(this), this.msPerFrame);
         },
@@ -541,10 +557,12 @@
          * Update the game state
          */
         update: function () {
+            updates++;
             this.updatePending = false;
 
             var now = getTimeStamp();
             var deltaTime = now - (this.time || now);
+            deltaTime *= SPEED_FACTOR;
             this.time = now;
 
 
@@ -591,7 +609,7 @@
                       this.restart();
                     });
                 } else {
-                  this.distanceRan += this.currentSpeed * deltaTime / this.msPerFrame;
+                  this.distanceRan += this.currentSpeed * deltaTime * 60 / 1000;
 
                   if (this.currentSpeed < this.config.MAX_SPEED) {
                       this.currentSpeed += this.config.ACCELERATION;
