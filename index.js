@@ -344,6 +344,11 @@
             }
         },
 
+        startUpdateLoop: function () {
+          this.update();
+          setTimeout(this.startUpdateLoop.bind(this), this.msPerFrame);
+        },
+
         /**
          * Game initialiser.
          */
@@ -386,6 +391,8 @@
 
             this.startListening();
             this.update();
+            this.startUpdateLoop();
+            this.draw();
 
             window.addEventListener(Runner.events.RESIZE,
                 this.debounceResize.bind(this));
@@ -514,8 +521,24 @@
           });
         },
 
+
         /**
-         * Update the game frame and schedules the next one.
+         * Render the game objects
+         */
+        draw: function () {
+          this.clearCanvas();
+          this.tRex.forEach(rex => {
+            if(this.playing) {
+              rex.draw();
+            }
+          });
+          this.horizon.draw();
+          this.distanceMeter.draw();
+          this.scheduleNextDraw();
+        },
+
+        /**
+         * Update the game state
          */
         update: function () {
             this.updatePending = false;
@@ -526,7 +549,6 @@
 
 
             if (this.playing) {
-                this.clearCanvas();
                 this.tRex.forEach(rex => {
                   if(rex.jumping) {
                     rex.updateJump(deltaTime);
@@ -633,7 +655,6 @@
 
             if (this.playing || (!this.activated &&
                 this.tRex[0].blinkCount < Runner.config.MAX_BLINK_COUNT)) {
-                this.scheduleNextUpdate();
             }
         },
 
@@ -724,11 +745,8 @@
         /**
          * RequestAnimationFrame wrapper.
          */
-        scheduleNextUpdate: function () {
-            if (!this.updatePending) {
-                this.updatePending = true;
-                this.raqId = requestAnimationFrame(this.update.bind(this));
-            }
+        scheduleNextDraw: function () {
+          this.raqId = requestAnimationFrame(this.draw.bind(this));
         },
 
         /**
@@ -795,6 +813,7 @@
                 this.playSound(this.soundFx.BUTTON_PRESS);
                 this.invert(true);
                 this.update();
+                this.draw();
             }
         },
 
@@ -1325,7 +1344,6 @@
                             this.timer = 0;
                         }
                     }
-                    this.draw();
 
                     if (!this.isVisible()) {
                         this.remove = true;
@@ -1608,10 +1626,7 @@
 
             if (this.status == Trex.status.WAITING) {
                 this.blink(getTimeStamp());
-            } else {
-                this.draw(this.currentAnimFrames[this.currentFrame], 0);
             }
-
             // Update the frame position.
             if (this.timer >= this.msPerFrame) {
                 this.currentFrame = this.currentFrame ==
@@ -1631,10 +1646,10 @@
          * @param {number} x
          * @param {number} y
          */
-        draw: function (x, y) {
+        draw: function () {
             if(this.dead) { return }
-            var sourceX = x;
-            var sourceY = y;
+            var sourceX = this.currentAnimFrames[this.currentFrame];
+            var sourceY = 0;
             var sourceWidth = this.ducking && this.status != Trex.status.CRASHED ?
                 this.config.WIDTH_DUCK : this.config.WIDTH;
             var sourceHeight = this.config.HEIGHT;
@@ -1684,7 +1699,7 @@
             var deltaTime = time - this.animStartTime;
 
             if (deltaTime >= this.blinkDelay) {
-                this.draw(this.currentAnimFrames[this.currentFrame], 0);
+                this.draw();
 
                 if (this.currentFrame == 1) {
                     // Set new random delay to blink.
@@ -1881,7 +1896,7 @@
             this.calcXPos(width);
             this.maxScore = this.maxScoreUnits;
             for (var i = 0; i < this.maxScoreUnits; i++) {
-                this.draw(i, 0);
+                this.drawInternal(i, 0);
                 this.defaultString += '0';
                 maxDistanceStr += '9';
             }
@@ -1898,13 +1913,23 @@
                 (this.maxScoreUnits + 1));
         },
 
+        draw: function() {
+            // Draw the digits if not flashing.
+            if (this.paint) {
+                for (var i = this.digits.length - 1; i >= 0; i--) {
+                    this.drawInternal(i, parseInt(this.digits[i]));
+                }
+            }
+            this.drawHighScore();
+        },
+
         /**
          * Draw a digit to canvas.
          * @param {number} digitPos Position of the digit.
          * @param {number} value Digit value 0-9.
          * @param {boolean} opt_highScore Whether drawing the high score.
          */
-        draw: function (digitPos, value, opt_highScore) {
+        drawInternal: function (digitPos, value, opt_highScore) {
             var sourceWidth = DistanceMeter.dimensions.WIDTH;
             var sourceHeight = DistanceMeter.dimensions.HEIGHT;
             var sourceX = DistanceMeter.dimensions.WIDTH * value;
@@ -1961,7 +1986,7 @@
          * @return {boolean} Whether the acheivement sound fx should be played.
          */
         update: function (deltaTime, distance) {
-            var paint = true;
+            this.paint = true;
             var playSound = false;
 
             if (!this.acheivement) {
@@ -1997,7 +2022,7 @@
                     this.flashTimer += deltaTime;
 
                     if (this.flashTimer < this.config.FLASH_DURATION) {
-                        paint = false;
+                        this.paint = false;
                     } else if (this.flashTimer >
                         this.config.FLASH_DURATION * 2) {
                         this.flashTimer = 0;
@@ -2010,14 +2035,7 @@
                 }
             }
 
-            // Draw the digits if not flashing.
-            if (paint) {
-                for (var i = this.digits.length - 1; i >= 0; i--) {
-                    this.draw(i, parseInt(this.digits[i]));
-                }
-            }
 
-            this.drawHighScore();
             return playSound;
         },
 
@@ -2028,7 +2046,7 @@
             this.canvasCtx.save();
             this.canvasCtx.globalAlpha = .8;
             for (var i = this.highScore.length - 1; i >= 0; i--) {
-                this.draw(i, parseInt(this.highScore[i], 10), true);
+                this.drawInternal(i, parseInt(this.highScore[i], 10), true);
             }
             this.canvasCtx.restore();
         },
@@ -2221,7 +2239,6 @@
                             NightMode.config.STAR_SPEED);
                     }
                 }
-                this.draw();
             } else {
                 this.opacity = 0;
                 this.placeStars();
@@ -2424,7 +2441,6 @@
             } else {
                 this.updateXPos(1, increment);
             }
-            this.draw();
         },
 
         /**
@@ -2511,6 +2527,13 @@
             if (updateObstacles) {
                 this.updateObstacles(deltaTime, currentSpeed);
             }
+        },
+
+        draw: function () {
+          this.horizonLine.draw();
+          this.nightMode.draw();
+          this.obstacles && this.obstacles.forEach(obstacle => obstacle.draw());
+          this.clouds && this.clouds.forEach(cloud => cloud.draw());
         },
 
         /**
