@@ -8,7 +8,7 @@ class RoboRex {
   }
 
   tick(nextObstacle) {
-    return _.range(POPULATION_SIZE).map(() => false);
+    return _.range(POPULATION_SIZE).map(() => _.random(0,1,true) > 0.5);
   }
 
   finished(scores, restart) {

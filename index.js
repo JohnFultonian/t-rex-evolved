@@ -357,12 +357,12 @@ showUpdates();
         },
 
         startUpdateLoop: function () {
+          setTimeout(this.startUpdateLoop.bind(this), this.msPerFrame);
           if(NEXT_SPEED_FACTOR != SPEED_FACTOR) {
             SPEED_FACTOR = NEXT_SPEED_FACTOR;
             this.msPerFrame = 1000 / (FPS * SPEED_FACTOR);
           }
           this.update();
-          setTimeout(this.startUpdateLoop.bind(this), this.msPerFrame);
         },
 
         /**
@@ -543,13 +543,13 @@ showUpdates();
          */
         draw: function () {
           this.clearCanvas();
+          this.horizon.draw();
+          this.distanceMeter.draw();
           this.tRex.forEach(rex => {
             if(this.playing) {
               rex.draw();
             }
           });
-          this.horizon.draw();
-          this.distanceMeter.draw();
           this.scheduleNextDraw();
         },
 
