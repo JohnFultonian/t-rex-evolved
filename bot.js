@@ -35,9 +35,7 @@ class RoboRex {
 
     let offSpring = [];
     let currentlyBreeding = 0;
-    console.log(agentsToPreserve);
     while(offSpring.length < requiredOffspring) {
-      console.log(currentlyBreeding);
       offSpring.push(breed(agentsToPreserve[currentlyBreeding], agentsToPreserve[currentlyBreeding + 1])[0]);
       currentlyBreeding++;
       if(currentlyBreeding >= agentsToPreserve.length - 1);

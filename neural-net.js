@@ -10,25 +10,36 @@ const OUTPUT_LAYER_SIZE = 1;
 // weights and biases are both arrays
 // the size of the weight and bias arrays should be equal to the number of inputs coming into the node
 class Node {
-  constructor(weights, biases, activationFunction = sigmoid) {
+  constructor(weights, activationFunction = sigmoid) {
     this.weights = weights;
-    this.biases = biases;
     this.activationFunction = activationFunction;
   }
 
   value(input) {
     let inputsArray = _.isArray(input) ? input : [input];
-    return this.activationFunction(inputsArray.reduce((accumulator, value, index) => accumulator + this.weights[index]*input + this.biases[index],0));
+    return this.activationFunction(inputsArray.reduce((accumulator, value, index) => accumulator + this.weights[index]*input,0));
   }
 }
 
-// An input nodes value is identical to its input value
-// (1 weight, 0 bias, identity activation function)
-const createInputNode = () => new Node([1], [0], i => i);
+class InputNode {
+  constructor() {
+    this.weights = [];
+  }
+  value(input) { return input; }
+}
+
+class BiasNode {
+  constructor() {
+    this.weights = [];
+  }
+
+  value(input) { return 1; }
+}
+
+const createInputNode = () => new Node([1], i => i);
 
 const createRandomNode = (inputSize) => new Node(
     _.range(inputSize).map(() => _.random(-1, 1, true)),
-  _.range(inputSize).map(() => 0)//_.random(-1, 1, true))
 );
 
 // Represents a Neural Network
@@ -37,8 +48,8 @@ const createRandomNode = (inputSize) => new Node(
 class NeuralNetwork {
   constructor() {
     this.layers = [
-      _.range(INPUT_LAYER_SIZE).map(() => createInputNode()),
-      _.range(HIDDEN_LAYER_SIZE).map(() => createRandomNode(INPUT_LAYER_SIZE)),
+      [..._.range(INPUT_LAYER_SIZE).map(() => new InputNode()), new BiasNode()],
+      [..._.range(HIDDEN_LAYER_SIZE).map(() => createRandomNode(INPUT_LAYER_SIZE)), new BiasNode()],
       _.range(OUTPUT_LAYER_SIZE).map(() => createRandomNode(HIDDEN_LAYER_SIZE)),
     ];
   }

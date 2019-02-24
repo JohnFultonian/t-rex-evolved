@@ -11,8 +11,7 @@ const breed = (networkA, networkB, numOffspring = 1) => {
     newOffspring.layers = newOffspring.layers.map((layer, i) => {
       return layer.map((node, j) => {
         let weights = node.weights.map((weight, k) => withProbability(0.5) ? weight : networkB.layers[i][j].weights[k]);
-        let biases = node.biases;//.map((bias, k) => withProbability(0.5) ? bias : networkB.layers[i][j].biases[k]);
-        return new Node(weights, biases);
+        return new Node(weights);
       });
     });
 
@@ -22,8 +21,7 @@ const breed = (networkA, networkB, numOffspring = 1) => {
       ..._.tail(newOffspring.layers).map((layer) => {
         return layer.map(node => {
           let weights = node.weights.map((weight) => withProbability(MUTATION_RATE) ? mutate() : weight);
-          let biases = node.biases;// .map((bias) => withProbability(MUTATION_RATE) ? mutate() : bias);
-          return new Node(weights, biases);
+          return new Node(weights);
         });
       }) ]
     return newOffspring;
