@@ -1,3 +1,4 @@
+window.SPEED_FACTOR = 1;
 // Copyright (c) 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -490,9 +491,9 @@ showUpdates();
                     'from { width:' + Trex.config.WIDTH + 'px }' +
                     'to { width: ' + this.dimensions.WIDTH + 'px }' +
                     '}';
-                
-                // create a style sheet to put the keyframe rule in 
-                // and then place the style sheet in the html head    
+
+                // create a style sheet to put the keyframe rule in
+                // and then place the style sheet in the html head
                 var sheet = document.createElement('style');
                 sheet.innerHTML = keyframes;
                 document.head.appendChild(sheet);
@@ -612,7 +613,7 @@ showUpdates();
                   this.distanceRan += this.currentSpeed * deltaTime * 60 / 1000;
 
                   if (this.currentSpeed < this.config.MAX_SPEED) {
-                      this.currentSpeed += this.config.ACCELERATION;
+                      this.currentSpeed += this.config.ACCELERATION * deltaTime / this.msPerFrame;;
                   }
                 }
 
@@ -1501,6 +1502,13 @@ showUpdates();
         this.jumpspotX = 0;
 
         this.init();
+        window.updatedSpeed = () => {
+          Object.keys(Trex.animFrames).forEach(anim => {
+            Trex.animFrames[anim].msPerFrame = Trex.animFrames[anim].baseMsPerFrame / SPEED_FACTOR;
+          });
+          FPS = 60 * SPEED_FACTOR;
+          this.msPerFrame = 1000 / FPS;
+        }
     };
 
 
@@ -1570,23 +1578,28 @@ showUpdates();
     Trex.animFrames = {
         WAITING: {
             frames: [44, 0],
-            msPerFrame: 1000 / 3
+            msPerFrame: 1000 / 3,
+            baseMsPerFrame: 1000 / 3
         },
         RUNNING: {
             frames: [88, 132],
-            msPerFrame: 1000 / 12
+            msPerFrame: 1000 / 12,
+            baseMsPerFrame: 1000 / 12
         },
         CRASHED: {
             frames: [220],
-            msPerFrame: 1000 / 60
+            msPerFrame: 1000 / 60,
+            baseMsPerFrame: 1000 / 60
         },
         JUMPING: {
             frames: [0],
-            msPerFrame: 1000 / 60
+            msPerFrame: 1000 / 60,
+            baseMsPerFrame: 1000 / 60
         },
         DUCKING: {
             frames: [264, 323],
-            msPerFrame: 1000 / 8
+            msPerFrame: 1000 / 8,
+            baseMsPerFrame: 1000 / 8
         }
     };
 
