@@ -1,6 +1,7 @@
 const sigmoid = num => 1/(1+Math.exp((-num) / 1));
 
 
+let lastNetworkId = 0;
 const INPUT_LAYER_SIZE = 2;
 //const HIDDEN_LAYER_SIZE = 2
 const HIDDEN_LAYER_SIZES = [3, 3]
@@ -21,7 +22,6 @@ class Node {
     let weightedInputs = inputsArray.map((value, i) => value*this.weights[i]);
     let summedInputs = weightedInputs.reduce((a, b) => a + b);
     return this.activationFunction(summedInputs);
-    //return this.activationFunction(inputsArray.reduce((accumulator, value, index) => accumulator + this.weights[index]*value,0));
   }
 }
 
@@ -51,7 +51,8 @@ const createRandomNode = (inputSize) => new Node(
 // A Neural network is by default constructed using random nodes
 class NeuralNetwork {
   constructor() {
-    let inputLayer = [..._.times(INPUT_LAYER_SIZE, () => new InputNode()), new BiasNode()];
+    this.name = lastNetworkId;
+    lastNetworkId++;
     let lastLayerSize = INPUT_LAYER_SIZE + 1;
     let hiddenLayers = HIDDEN_LAYER_SIZES.map((layerSize) => {
       let layer = [..._.times(layerSize, () => createRandomNode(lastLayerSize)), new BiasNode()]
@@ -64,11 +65,6 @@ class NeuralNetwork {
       ...hiddenLayers,
       outputLayer
     ]
-    //this.layers = [
-    //  [..._.range(INPUT_LAYER_SIZE).map(() => new InputNode()), new BiasNode()],
-    //  [..._.range(HIDDEN_LAYER_SIZE).map(() => createRandomNode(INPUT_LAYER_SIZE)), new BiasNode()],
-    //  _.range(OUTPUT_LAYER_SIZE).map(() => createRandomNode(HIDDEN_LAYER_SIZE)),
-    //];
   }
 
   // takes an array of inputs, returns an array of outputs

@@ -1,6 +1,6 @@
 const withProbability = (probability) => _.random(true) <= probability;
 
-const MUTATION_RATE = 0.2;
+const MUTATION_RATE = 0.1;
 const mutate = () => _.random(-1, 1, true);
 
 const breed = (networkA, networkB, numOffspring = 1) => {
@@ -16,14 +16,14 @@ const breed = (networkA, networkB, numOffspring = 1) => {
     });
 
     // mutate
-    newOffspring.layers = [
-      newOffspring.layers[0], //dont mutate input layer
-      ..._.tail(newOffspring.layers).map((layer) => {
-        return layer.map(node => {
-          let weights = node.weights.map((weight) => withProbability(MUTATION_RATE) ? mutate() : weight);
-          return new Node(weights);
-        });
-      }) ]
+    //newOffspring.layers = [
+    //  newOffspring.layers[0], //dont mutate input layer
+    //  ..._.tail(newOffspring.layers).map((layer) => {
+    //    return layer.map(node => {
+    //      let weights = node.weights.map((weight) => withProbability(MUTATION_RATE) ? mutate() : weight);
+    //      return new Node(weights);
+    //    });
+    //  }) ]
     return newOffspring;
   });
 }
