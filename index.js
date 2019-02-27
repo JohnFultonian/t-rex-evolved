@@ -5,15 +5,6 @@ window.SPEED_FACTOR = 1;
 // extract from chromium source code by @liuwayong
 window.SPEED_FACTOR = 1;
 window.NEXT_SPEED_FACTOR = 1;
-var updates = 0;
-
-let showUpdates = () => {
-  console.log('updates per second', updates);
-  updates = 0;
-  setTimeout(showUpdates, 1000);
-}
-
-showUpdates();
 
 (function () {
     'use strict';
@@ -558,7 +549,6 @@ showUpdates();
          * Update the game state
          */
         update: function () {
-            updates++;
             this.updatePending = false;
 
             var now = getTimeStamp();
