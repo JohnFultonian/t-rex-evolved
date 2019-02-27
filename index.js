@@ -599,7 +599,7 @@ showUpdates();
 
                   if(collision) {
                     rex.dead = true;
-                    rex.score = this.distanceRan;
+                    rex.score = this.distanceRan * DistanceMeter.config.COEFFICIENT;
                   }
                 });
 
