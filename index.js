@@ -523,9 +523,11 @@ window.NEXT_SPEED_FACTOR = 1;
         },
 
         act: function (actions) {
-          actions.forEach((shouldJump, index) => {
+          actions.forEach((action, index) => {
             let rex = this.tRex[index];
-            shouldJump && rex.startJump(this.currentSpeed);
+            let [shouldJump, shouldDuck] = action.map(a => a > 0.5);
+            shouldJump && !shouldDuck && rex.startJump(this.currentSpeed);
+            shouldDuck && !shouldJump && rex.setDuck(true);
           });
         },
 

@@ -3,8 +3,8 @@ const sigmoid = num => 1/(1+Math.exp((-num) / 1));
 
 const INPUT_LAYER_SIZE = 2;
 //const HIDDEN_LAYER_SIZE = 2
-const HIDDEN_LAYER_SIZES = [2]
-const OUTPUT_LAYER_SIZE = 1;
+const HIDDEN_LAYER_SIZES = [3, 3]
+const OUTPUT_LAYER_SIZE = 2;
 
 
 // Represents a node in a neural network
@@ -18,15 +18,18 @@ class Node {
 
   value(input) {
     let inputsArray = _.isArray(input) ? input : [input];
-    return this.activationFunction(inputsArray.reduce((accumulator, value, index) => accumulator + this.weights[index]*input,0));
+    let weightedInputs = inputsArray.map((value, i) => value*this.weights[i]);
+    let summedInputs = weightedInputs.reduce((a, b) => a + b);
+    return this.activationFunction(summedInputs);
+    //return this.activationFunction(inputsArray.reduce((accumulator, value, index) => accumulator + this.weights[index]*value,0));
   }
 }
 
 class InputNode {
-  constructor() {
-    this.weights = [];
+  constructor(value) {
+    this.value = value;
   }
-  value(input) { return input; }
+  value(input) { return this.value; }
 }
 
 class BiasNode {
@@ -51,13 +54,13 @@ class NeuralNetwork {
     let inputLayer = [..._.times(INPUT_LAYER_SIZE, () => new InputNode()), new BiasNode()];
     let lastLayerSize = INPUT_LAYER_SIZE + 1;
     let hiddenLayers = HIDDEN_LAYER_SIZES.map((layerSize) => {
-      return [..._.times(layerSize, () => createRandomNode(lastLayerSize)), new BiasNode()]
+      let layer = [..._.times(layerSize, () => createRandomNode(lastLayerSize)), new BiasNode()]
       lastLayerSize = layerSize + 1;
+      return layer;
     });
     let outputLayer = _.times(OUTPUT_LAYER_SIZE, () => createRandomNode(lastLayerSize));
 
     this.layers = [
-      inputLayer,
       ...hiddenLayers,
       outputLayer
     ]
@@ -70,10 +73,11 @@ class NeuralNetwork {
 
   // takes an array of inputs, returns an array of outputs
   value(inputs) {
-    let inputsToNextLayer = inputs;
+    let inputsToNextLayer = [...inputs, 1];
 
     this.layers.forEach(layer => {
-      inputsToNextLayer = layer.map((node, i) => node.value(inputsToNextLayer[i]));
+      let next = layer.map((node) => node.value(inputsToNextLayer));
+      inputsToNextLayer = next;
     });
     return inputsToNextLayer;
   }

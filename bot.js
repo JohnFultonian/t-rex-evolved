@@ -1,7 +1,9 @@
-const POPULATION_SIZE = 100;
+const POPULATION_SIZE = 1000;
 
 const ELITISM = 0.2 // percent of population to keep (from top performers)
 const NEW_RANDOM = 0.2 // percent of population to replace with random new population
+
+const log = _.throttle((nextObstacle, normalizedInputs) => {});
 
 class RoboRex {
   init(start) {
@@ -13,10 +15,15 @@ class RoboRex {
 
   // neural network output of > 0.5 indicates rex should jump.
   tick(nextObstacle) {
-    return nextObstacle ?
-      //this.agents.map(agent => agent.value(Object.values(nextObstacle).map(i => sigmoid(i))) > 0.5) :
-      this.agents.map(agent => agent.value([nextObstacle.distance, nextObstacle.bottom]) > 0.5) :
-      this.agents.map(() => false) // If no obstacles. Don't jump
+    if(!nextObstacle) {
+      // If no obstacles, take no action
+      return this.agents.map(() =>  [false, false]);
+    }
+
+    let normalizedInputs = this.normalize(nextObstacle);
+
+    log(nextObstacle, normalizedInputs);
+    return this.agents.map(agent => agent.value(normalizedInputs));
   }
 
   finished(scores, restart) {
@@ -38,11 +45,20 @@ class RoboRex {
     while(offSpring.length < requiredOffspring) {
       offSpring.push(breed(agentsToPreserve[currentlyBreeding], agentsToPreserve[currentlyBreeding + 1])[0]);
       currentlyBreeding++;
-      if(currentlyBreeding >= agentsToPreserve.length - 1);
+      if(currentlyBreeding >= agentsToPreserve.length - 1) {
         currentlyBreeding = 0;
+      }
     }
 
     return [...agentsToPreserve, ...offSpring, ...freshAgents];
+  }
+
+
+  normalize(obstacle) {
+    return [
+      obstacle.distance / 1000,
+      obstacle.bottom / 100,
+    ];
   }
 }
 
